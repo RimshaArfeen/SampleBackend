@@ -51,6 +51,8 @@ app.post("/signup", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
+      await connectDB();
+
   const { email, password } = req.body;
   if (!email || !password) return res.json({ error: "Please enter email and password" });
 
@@ -78,6 +80,7 @@ app.post("/applicationForm", upload.single("file"), async (req, res) => {
 
 // Middleware to verify token
 function verifyToken(req, res, next) {
+
   let bearerHeader = req.headers["authorization"];
   if (bearerHeader) {
     req.token = bearerHeader.split(" ")[1];
@@ -87,7 +90,9 @@ function verifyToken(req, res, next) {
   }
 }
 
-app.get("/profile", verifyToken, (req, res) => {
+app.get("/profile", verifyToken, async(req, res) => {
+      await connectDB();
+
   JWT.verify(req.token, jwtKey, (err, authData) => {
     if (err) res.status(403).json({ result: "Invalid token" });
     else res.json({ authData });
