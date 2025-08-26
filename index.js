@@ -35,6 +35,7 @@ app.get("/", (req, res) => {
 
 app.post("/signup", async (req, res) => {
   try {
+    await connectDB();
     let user = new User(req.body);
     let result = await user.save();
     result = result.toObject();
