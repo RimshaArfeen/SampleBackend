@@ -7,7 +7,7 @@ import JWT from "jsonwebtoken";
 import { storage } from "./cloudinary.js";
 import User from "./Schema/Applicant.js";
 import StudentInfo from "./Schema/StudentInfo.js";
-
+import { connectDB } from "./db.js";
 dotenv.config();
 
 const app = express();
