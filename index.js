@@ -10,10 +10,29 @@ import StudentInfo from "./Schema/StudentInfo.js";
 import { connectDB } from "./db.js";
 dotenv.config();
 
-const app = express();
-app.use(express.json());
-app.use(cors());
 const PORT = 8000;
+
+// Configure CORS to allow requests from your frontend's domain
+const allowedOrigins = [
+  'https://gispfrontend.vercel.app',
+  'http://localhost:8000' // For local development
+];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // This is important for sending cookies/tokens
+};
+
+app.use(cors(corsOptions));
+app.use(express.json()); // To parse JSON request bodies
+
+
 // ✅ MongoDB connection (optimized for serverless)
 if (!mongoose.connection.readyState) {
   mongoose.connect(process.env.MONGODB_URI, {
