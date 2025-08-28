@@ -1,3 +1,5 @@
+
+
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
@@ -28,10 +30,12 @@ const corsOptions = {
   },
   credentials: true, // This is important for sending cookies/tokens
 };
-
-app.use(cors(corsOptions));
-app.use(express.json()); // To parse JSON request bodies
-
+const app = express();
+app.use(express.json());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 
 // ✅ MongoDB connection (optimized for serverless)
 if (!mongoose.connection.readyState) {
@@ -139,4 +143,5 @@ app.listen(PORT, () => {
   console.log(`✅ Server is running on port ${PORT}`);
 })
 
-//api/index.js
+
+// export default app;  // required for Vercel
