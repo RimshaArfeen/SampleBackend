@@ -21,11 +21,7 @@ app.use(express.json());
 // This should be done only once at the top level, outside of route handlers.
 // The Vercel serverless environment will manage this connection lifecycle.
 if (!mongoose.connection.readyState) {
-  mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 40000,
-  })
+  mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.error("❌ MongoDB error:", err));
 }
