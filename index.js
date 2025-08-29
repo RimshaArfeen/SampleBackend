@@ -150,3 +150,6 @@ app.put("/adminPg/:id", async (req, res) => {
 
 // Important: This line is required for Vercel serverless functions
 export default app;
+// app.listen(3000, () => {
+//   console.log("Server is running on port 3000");
+// });
