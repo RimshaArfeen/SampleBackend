@@ -14,17 +14,22 @@ dotenv.config();
 
 // Initialize express app
 const app = express();
-app.use(cors());
-app.use(express.json());
+const allowedOrigins = ['https://gispfrontend.vercel.app', "http://localhost:5173"]; // 👈 Your frontend URL
 
-// ✅ MongoDB connection (optimized for serverless)
-// This should be done only once at the top level, outside of route handlers.
-// The Vercel serverless environment will manage this connection lifecycle.
-if (!mongoose.connection.readyState) {
-  mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch(err => console.error("❌ MongoDB error:", err));
-}
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+};
+
+app.use(cors(corsOptions));
+// body parser
+app.use(express.json());
 
 const upload = multer({ storage });
 const jwtKey = process.env.JWT_SECRET || "jwtSecretKey";
@@ -38,7 +43,7 @@ app.get("/", (req, res) => {
 
 app.post("/signup", async (req, res) => {
   try {
-    // connectDB() is not needed here if connection is handled at the top
+    await connectDB();
     let user = new User(req.body);
     let result = await user.save();
     result = result.toObject();
@@ -55,7 +60,7 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   try {
-    // connectDB() is not needed here if connection is handled at the top
+    await connectDB();
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: "Please enter email and password" });
@@ -80,6 +85,8 @@ app.post("/login", async (req, res) => {
 
 app.post("/applicationForm", upload.single("file"), async (req, res) => {
   try {
+        await connectDB();
+
     const student = new StudentInfo({
       ...req.body,
       documentUrl: req.file?.path, // Cloudinary file URL
@@ -104,6 +111,8 @@ function verifyToken(req, res, next) {
 
 app.get("/profile", verifyToken, async (req, res) => {
   try {
+        await connectDB();
+
     JWT.verify(req.token, jwtKey, (err, authData) => {
       if (err) res.status(403).json({ result: "Invalid token" });
       else res.json({ authData });
@@ -116,6 +125,8 @@ app.get("/profile", verifyToken, async (req, res) => {
 
 app.get("/adminPg", async (req, res) => {
   try {
+        await connectDB();
+
     let studentData = await StudentInfo.find();
     res.json({ studentData });
   } catch (error) {
@@ -125,6 +136,8 @@ app.get("/adminPg", async (req, res) => {
 
 app.put("/adminPg/:id", async (req, res) => {
   try {
+        await connectDB();
+
     const { id } = req.params;
     const { status } = req.body;
     const updApplication = await StudentInfo.findByIdAndUpdate(id, { status }, { new: true });
