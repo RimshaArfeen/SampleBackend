@@ -48,7 +48,7 @@ app.post("/signup", async (req, res) => {
     result = result.toObject();
     delete result.password;
 
-    JWT.sign({ result }, jwtKey, { expiresIn: "5000s" }, (err, token) => {
+    JWT.sign({ result }, jwtKey, { expiresIn: "50000s" }, (err, token) => {
       if (err) return res.status(500).json({ message: "Token generation failed" });
       res.json({ message: "User signed up successfully", result, auth: token });
     });
