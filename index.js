@@ -11,14 +11,28 @@ import User from "./Schema/Applicant.js";
 import StudentInfo from "./Schema/StudentInfo.js";
 import { connectDB } from "./db.js";
 
-// Load environment variables
 dotenv.config();
 
-// Initialize express app
 const app = express();
 app.use(express.json());
 
-app.use(cors());
+// ✅ CORS config
+const allowedOrigins = [
+  "https://gispfrontend.vercel.app",  // your deployed frontend
+  "http://localhost:5173",            // for local dev
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
 
 // File uploads
 const upload = multer({ storage });
@@ -137,9 +151,7 @@ app.put("/adminPg/:id", async (req, res) => {
 });
 
 // ---------------- Local Dev ----------------
-if (process.env.NODE_ENV !== "production") {
-  app.listen(3000, () => console.log("Local server running on port 3000"));
-}
 
-// ✅ Export Express app directly (Vercel wraps it)
-export default app;
+import serverless from "serverless-http";
+export const handler = serverless(app);
+
