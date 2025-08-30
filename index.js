@@ -130,7 +130,7 @@ app.get("/adminPg", async (req, res) => {
   try {
     // ✅ Get query params for pagination
     // Default: page=1, limit=10 if not provided
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 2 } = req.query;
 
     // ✅ Convert to numbers (query params are strings by default)
     const pageNum = parseInt(page);
