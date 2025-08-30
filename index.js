@@ -29,7 +29,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// app.options(cors(corsOptions));
 app.use(express.json());
 
 
@@ -156,4 +155,4 @@ if (process.env.NODE_ENV !== "production") {
   app.listen(5000, () => console.log("Local server running on port 5000"));
 }
 
-export const handler = serverless(app);
+export default serverless(app);
