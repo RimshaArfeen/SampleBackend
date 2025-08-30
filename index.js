@@ -1,3 +1,5 @@
+
+//index.js
 // import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
@@ -39,6 +41,8 @@ app.use(
 const upload = multer({ storage });
 const jwtKey = process.env.JWT_SECRET || "jwtSecretKey";
 
+// ---------------- Connect to MongoDB ----------------   
+ connectDB();
 // ---------------- Routes ----------------
 app.get("/", (req, res) => {
   res.send("Hello from Vercel backend!");
@@ -47,7 +51,7 @@ app.get("/", (req, res) => {
 // signup
 app.post("/signup", async (req, res) => {
   try {
-    await connectDB();
+    
     let user = new User(req.body);
     let result = await user.save();
     result = result.toObject();
@@ -65,7 +69,7 @@ app.post("/signup", async (req, res) => {
 // login
 app.post("/login", async (req, res) => {
   try {
-    await connectDB();
+    
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: "Please enter email and password" });
 
@@ -85,7 +89,7 @@ app.post("/login", async (req, res) => {
 // applicationForm
 app.post("/applicationForm", upload.single("file"), async (req, res) => {
   try {
-    await connectDB();
+    
     const student = new StudentInfo({
       ...req.body,
       documentUrl: req.file?.path,
@@ -110,7 +114,7 @@ function verifyToken(req, res, next) {
 
 app.get("/profile", verifyToken, async (req, res) => {
   try {
-    await connectDB();
+    
     JWT.verify(req.token, jwtKey, (err, authData) => {
       if (err) res.status(403).json({ result: "Invalid token" });
       else res.json({ authData });
@@ -121,19 +125,47 @@ app.get("/profile", verifyToken, async (req, res) => {
   }
 });
 
+// ---------------- ADMIN PAGE (with pagination + lean + selective fields) ----------------
 app.get("/adminPg", async (req, res) => {
   try {
-    await connectDB();
-    let studentData = await StudentInfo.find();
-    res.json({ studentData });
+    // ✅ Get query params for pagination
+    // Default: page=1, limit=20 if not provided
+    const { page = 1, limit = 20 } = req.query;
+
+    // ✅ Convert to numbers (query params are strings by default)
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+
+    // ✅ Fetch student data with:
+    // - .skip() and .limit() for pagination
+    // - .select() to only return the fields you need
+    // - .lean() to return plain JS objects (faster, lighter than Mongoose docs)
+    const studentData = await StudentInfo.find()
+      .select("name email status createdAt") // 🔹 adjust fields as needed
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .lean();
+
+    // ✅ Optionally, get total count for frontend pagination
+    const totalDocs = await StudentInfo.countDocuments();
+
+    // ✅ Return paginated response
+    res.json({
+      studentData,
+      currentPage: pageNum,
+      totalPages: Math.ceil(totalDocs / limitNum),
+      totalRecords: totalDocs,
+    });
   } catch (error) {
+    console.error("AdminPg route error:", error);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 });
 
+
 app.put("/adminPg/:id", async (req, res) => {
   try {
-    await connectDB();
+    
     const { id } = req.params;
     const { status } = req.body;
     const updApplication = await StudentInfo.findByIdAndUpdate(id, { status }, { new: true });
