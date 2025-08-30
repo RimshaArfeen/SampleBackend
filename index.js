@@ -129,8 +129,8 @@ app.get("/profile", verifyToken, async (req, res) => {
 app.get("/adminPg", async (req, res) => {
   try {
     // ✅ Get query params for pagination
-    // Default: page=1, limit=20 if not provided
-    const { page = 1, limit = 20 } = req.query;
+    // Default: page=1, limit=10 if not provided
+    const { page = 1, limit = 10 } = req.query;
 
     // ✅ Convert to numbers (query params are strings by default)
     const pageNum = parseInt(page);
