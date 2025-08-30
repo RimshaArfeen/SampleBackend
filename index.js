@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -10,14 +10,12 @@ import StudentInfo from "./Schema/StudentInfo.js";
 import { connectDB } from "./db.js";
 import serverless from "serverless-http";
 
-dotenv.config();
+// dotenv.config();
 
 const app = express();
 app.use(express.json());
 
 // ---------------- CORRECTED CORS Config ----------------
-// The cors middleware handles all preflight and normal requests automatically.
-// The custom app.options("*", ...) handler is not needed and was causing the error.
 const allowedOrigins = [
   "https://gispfrontend.vercel.app", // deployed frontend
   "http://localhost:5173" // local dev
@@ -146,9 +144,14 @@ app.put("/adminPg/:id", async (req, res) => {
   }
 });
 
-// ---------------- Local Dev vs Vercel ----------------
+// ---------------- LOCAL DEV vs VERCEL ----------------
+// We use app.listen() for local development.
+// Vercel handles the server for you, so it's not needed there.
 if (process.env.NODE_ENV !== "production") {
   app.listen(5000, () => console.log("Local API running on http://localhost:5000"));
 }
 
-export const handler = serverless(app);
+// ---------------- VERCEL EXPORT FIX ----------------
+// The critical fix: Export the Express app instance wrapped with serverless-http.
+// This single export is what Vercel is looking for.
+export default serverless(app);
