@@ -8,6 +8,7 @@ import { storage } from "./cloudinary.js";
 import User from "./Schema/Applicant.js";
 import StudentInfo from "./Schema/StudentInfo.js";
 import { connectDB } from "./db.js";
+import serverless from "serverless-http";
 
 // Load environment variables
 dotenv.config();
@@ -17,19 +18,20 @@ const app = express();
 const allowedOrigins = ['https://gispfrontend.vercel.app', "http://localhost:5173"]; // 👈 Your frontend URL
 
 const corsOptions = {
-    origin: function (origin, callback) {
-        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true,
+  origin: function (origin, callback) {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
-// body parser
+// app.options(cors(corsOptions));
 app.use(express.json());
+
 
 const upload = multer({ storage });
 const jwtKey = process.env.JWT_SECRET || "jwtSecretKey";
@@ -85,7 +87,7 @@ app.post("/login", async (req, res) => {
 
 app.post("/applicationForm", upload.single("file"), async (req, res) => {
   try {
-        await connectDB();
+    await connectDB();
 
     const student = new StudentInfo({
       ...req.body,
@@ -111,7 +113,7 @@ function verifyToken(req, res, next) {
 
 app.get("/profile", verifyToken, async (req, res) => {
   try {
-        await connectDB();
+    await connectDB();
 
     JWT.verify(req.token, jwtKey, (err, authData) => {
       if (err) res.status(403).json({ result: "Invalid token" });
@@ -125,7 +127,7 @@ app.get("/profile", verifyToken, async (req, res) => {
 
 app.get("/adminPg", async (req, res) => {
   try {
-        await connectDB();
+    await connectDB();
 
     let studentData = await StudentInfo.find();
     res.json({ studentData });
@@ -136,7 +138,7 @@ app.get("/adminPg", async (req, res) => {
 
 app.put("/adminPg/:id", async (req, res) => {
   try {
-        await connectDB();
+    await connectDB();
 
     const { id } = req.params;
     const { status } = req.body;
@@ -148,8 +150,10 @@ app.put("/adminPg/:id", async (req, res) => {
   }
 });
 
-// Important: This line is required for Vercel serverless functions
-export default app;
-// app.listen(3000, () => {
-//   console.log("Server is running on port 3000");
-// });
+
+// For local dev
+if (process.env.NODE_ENV !== "production") {
+  app.listen(5000, () => console.log("Local server running on port 5000"));
+}
+
+export const handler = serverless(app);
