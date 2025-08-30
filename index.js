@@ -1,3 +1,5 @@
+
+
 import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
@@ -8,36 +10,21 @@ import { storage } from "./cloudinary.js";
 import User from "./Schema/Applicant.js";
 import StudentInfo from "./Schema/StudentInfo.js";
 import { connectDB } from "./db.js";
-import serverless from "serverless-http";
 
 // Load environment variables
 dotenv.config();
 
 // Initialize express app
 const app = express();
-const allowedOrigins = ['https://gispfrontend.vercel.app', "http://localhost:5173"]; // 👈 Your frontend URL
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
 app.use(express.json());
 
+app.use(cors());
 
+// File uploads
 const upload = multer({ storage });
 const jwtKey = process.env.JWT_SECRET || "jwtSecretKey";
 
-// Routes
-// Note: These routes now use relative paths, which is what Express expects.
-// Vercel.json handles routing the full URL to these paths internally.
+// ---------------- Routes ----------------
 app.get("/", (req, res) => {
   res.send("Hello from Vercel backend!");
 });
@@ -149,10 +136,10 @@ app.put("/adminPg/:id", async (req, res) => {
   }
 });
 
-
-// For local dev
+// ---------------- Local Dev ----------------
 if (process.env.NODE_ENV !== "production") {
-  app.listen(5000, () => console.log("Local server running on port 5000"));
+  app.listen(3000, () => console.log("Local server running on port 3000"));
 }
 
-export default serverless(app);
+// ✅ Export Express app directly (Vercel wraps it)
+export default app;
